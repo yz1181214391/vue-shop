@@ -14,9 +14,9 @@
       <el-aside  :width="isCollapse ? '64px': '200px'">
         <div class="toggle-button" @click="toggleCollapse">|||</div>
         <!-- 侧边栏菜单区域 -->
-         <el-menu
-         background-color="#333744" text-color="#fff" active-text-color="#409BFF"
-         :unique-opened = "true" :collapse='isCollapse' :collapse-transition="false">
+         <el-menu background-color="#333744" text-color="#fff" active-text-color="#409BFF"
+         :unique-opened = "true" :collapse='isCollapse' :collapse-transition="false"
+         :router='true' :default-active="activePath">
             <el-submenu :index="item.id + ''" v-for="item in menList" :key="item.id">
               <!-- 一级菜单 -->
               <template slot="title">
@@ -25,16 +25,19 @@
               </template>
 
               <!-- 二级菜单 -->
-              <el-menu-item :index="subItem.id + ''" v-for="subItem in item.children" :key="subItem.id">
+              <el-menu-item :index="'/'+subItem.path" v-for="subItem in item.children"
+              :key="subItem.id" @click="saveNavState('/'+subItem.path)">
                 <i class="el-icon-menu"></i>
                 <span>{{subItem.authName}}</span>
               </el-menu-item>
             </el-submenu>
-
           </el-menu>
       </el-aside>
       <!-- 右侧内容主体 -->
-      <el-main class="el-main">Main</el-main>
+      <el-main class="el-main">
+        <!-- 路由占位符 -->
+        <router-view></router-view>
+      </el-main>
     </el-container>
   </el-container>
 </template>
@@ -52,12 +55,16 @@ export default {
          102 : 'iconfont icon-dingdanguanli',
          145 : 'iconfont icon-shuju',
       },
-      isCollapse : false
+      // 是否折叠
+      isCollapse : false,
+      // 被激活的链接
+      activePath : ''
     }
   },
 
   created(){
     this.getMenuList();
+    this.activePath = window.sessionStorage.getItem('activePath')
   },
   methods:{
     logout(){
@@ -69,12 +76,18 @@ export default {
     //获取侧边栏所有菜单
     async getMenuList() {
       const {data : res} = await this.$http.get('menus');
-      // console.log(res);
+      console.log(res);
       if(res.meta.status !== 200) return this.$message.console.error(res.meta.msg);
       this.menList = res.data;
     },
+    //点击按钮，切换菜单栏折叠与展开
     toggleCollapse(){
       this.isCollapse = !this.isCollapse;
+    },
+    //保存当前点击菜单栏数据
+    saveNavState(activePath){
+      window.sessionStorage.setItem('activePath',activePath);
+      this.activePath = activePath
     }
 
   }
