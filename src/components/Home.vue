@@ -1,45 +1,36 @@
 <template>
-  <el-container class="el-container">
+  <el-container>
     <!-- 头部区 -->
-    <el-header class="el-header">
+    <el-header>
       <div>
         <img src="../assets/love.png" alt="">
         <span>电商管理后台系统</span>
       </div>
-      <el-button type="info" @click="loginBtn">退出</el-button>
+      <el-button type="info" @click="logout">退出</el-button>
     </el-header>
     <!-- 主体区域 -->
     <el-container>
       <!-- 侧边栏 -->
-      <el-aside class="el-aside" width="200px">
+      <el-aside  :width="isCollapse ? '64px': '200px'">
+        <div class="toggle-button" @click="toggleCollapse">|||</div>
         <!-- 侧边栏菜单区域 -->
-         <el-menu background-color="#545c64" text-color="#fff" active-text-color="#ffd04b">
-            <el-submenu index="1">
+         <el-menu
+         background-color="#333744" text-color="#fff" active-text-color="#409BFF"
+         :unique-opened = "true" :collapse='isCollapse' :collapse-transition="false">
+            <el-submenu :index="item.id + ''" v-for="item in menList" :key="item.id">
+              <!-- 一级菜单 -->
               <template slot="title">
-                <i class="el-icon-location"></i>
-                <span>导航一</span>
+                <i :class="iconsObj[item.id]"></i>
+                <span>{{item.authName}}</span>
               </template>
-              <el-menu-item-group>
-                <template slot="title">分组一</template>
-                <el-menu-item index="1-1">选项1</el-menu-item>
-                <el-menu-item index="1-2">选项2</el-menu-item>
-              </el-menu-item-group>
-              <el-menu-item-group title="分组2">
-                <el-menu-item index="1-3">选项3</el-menu-item>
-              </el-menu-item-group>
-              <el-submenu index="1-4">
-                <template slot="title">选项4</template>
-                <el-menu-item index="1-4-1">选项1</el-menu-item>
-              </el-submenu>
+
+              <!-- 二级菜单 -->
+              <el-menu-item :index="subItem.id + ''" v-for="subItem in item.children" :key="subItem.id">
+                <i class="el-icon-menu"></i>
+                <span>{{subItem.authName}}</span>
+              </el-menu-item>
             </el-submenu>
-            <el-menu-item index="2">
-              <i class="el-icon-menu"></i>
-              <span slot="title">导航二</span>
-            </el-menu-item>
-            <el-menu-item index="3">
-              <i class="el-icon-setting"></i>
-              <span slot="title">导航三</span>
-            </el-menu-item>
+
           </el-menu>
       </el-aside>
       <!-- 右侧内容主体 -->
@@ -49,14 +40,44 @@
 </template>
 <script>
 export default {
-methods:{
-  loginBtn(){
-    // 清除token
-    window.sessionStorage.clear();
-    // 跳转到登录login页面
-    this.$router.push('./login')
+  data() {
+    return {
+      //左侧菜单数据
+      menList: [],
+      // 字体图标
+      iconsObj : {
+         125 : 'iconfont icon-1',
+         103 : 'iconfont icon-quanxianguanli',
+         101 : 'iconfont icon-shangpin',
+         102 : 'iconfont icon-dingdanguanli',
+         145 : 'iconfont icon-shuju',
+      },
+      isCollapse : false
+    }
+  },
+
+  created(){
+    this.getMenuList();
+  },
+  methods:{
+    logout(){
+      // 清除token
+      window.sessionStorage.clear();
+      // 跳转到登录login页面
+      this.$router.push('./login')
+    },
+    //获取侧边栏所有菜单
+    async getMenuList() {
+      const {data : res} = await this.$http.get('menus');
+      // console.log(res);
+      if(res.meta.status !== 200) return this.$message.console.error(res.meta.msg);
+      this.menList = res.data;
+    },
+    toggleCollapse(){
+      this.isCollapse = !this.isCollapse;
+    }
+
   }
-}
 }
 </script>
 <style lang="less" scoped>
@@ -86,8 +107,24 @@ methods:{
   }
   .el-aside{
     background-color: #333744;
+    .el-menu{
+      border-right: 0;
+    }
   }
   .el-main{
     background-color: #eaedf1;
+  }
+  .iconfont{
+    margin-right: 10px;
+    color: #ffffff;
+  }
+  .toggle-button{
+    background-color: #4a5064;
+    font-size: 10px;
+    line-height: 24px;
+    color: #ffffff;
+    text-align: center;
+    letter-spacing: 0.2em;
+    cursor: pointer;
   }
 </style>
