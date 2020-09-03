@@ -27,15 +27,14 @@
         <el-table-column prop="mobile" label="电话" ></el-table-column>
         <el-table-column prop="role_name" label="角色" ></el-table-column>
         <el-table-column label="状态" >
-          <template slot-scope="scope">
+          <template v-slot="scope">
             <el-switch v-model="scope.row.mg_state" @change="userStateChanged(scope.row)"></el-switch>
           </template>
         </el-table-column>
         <el-table-column label="操作"  width="180px">
-          <template >
-            <!-- {{scope.row}}slot-scope="scope" -->
+          <template v-slot="scope">
             <!-- 修改按钮 -->
-            <el-button type="primary" icon="el-icon-edit" size="mini"></el-button>
+            <el-button type="primary" icon="el-icon-edit" size="mini" @click="showEditDialog(scope.row.id)"></el-button>
             <!-- 删除按钮 -->
             <el-button type="danger" icon="el-icon-delete" size="mini"></el-button>
             <!-- 分配角色按钮 -->
@@ -72,6 +71,27 @@
       <span slot="footer" class="dialog-footer">
         <el-button @click="addDialogVisible = false">取 消</el-button>
         <el-button type="primary" @click="addUser">确 定</el-button>
+      </span>
+    </el-dialog>
+
+    <!-- 修改用户对话框 -->
+    <el-dialog title="修改用户信息" :visible.sync="editDialogVisible" width="50%" @close="editDialogClosed">
+      <!-- 内容主题区:(model="editEorm" 数据绑定对象)（:rules="addFromRules" 表单验证规则对象）（ref="addFromRef"） -->
+      <el-form :model="editEorm" :rules="addFromRules" ref="editEormRef" label-width="70px">
+        <el-form-item label="用户名">
+          <el-input v-model="editEorm.username" :disabled="true"></el-input>
+        </el-form-item>
+        <el-form-item label="邮箱" prop="email">
+          <el-input v-model="editEorm.email"></el-input>
+        </el-form-item>
+        <el-form-item label="手机" prop="mobile">
+          <el-input v-model="editEorm.mobile"></el-input>
+        </el-form-item>
+      </el-form>
+      <!-- 底部区域 -->
+      <span slot="footer" class="dialog-footer">
+        <el-button @click="editDialogVisible = false">取 消</el-button>
+        <el-button type="primary" @click="editUserInfo">确 定</el-button>
       </span>
     </el-dialog>
   </div>
@@ -128,9 +148,10 @@ export default {
         mobile:[
           {required:true,message:'请输入手机号',trigger:'blur'},
           {validator: checkMobile, trigger: 'blur'}
-
         ]
-      }
+      },
+      editDialogVisible: false,//控制修改用户对话框的显示与隐藏
+      editEorm:{} //查询到的用户数据
     }
   },
   // 生命周期函数
@@ -158,9 +179,7 @@ export default {
     },
     // 监听switch开关状态的改变
     async userStateChanged(userinfo){
-      console.log(userinfo);
       const {data : res} = await this.$http.put(`users/${userinfo.id}/state/${userinfo.mg_state}`);
-      console.log(res);
       if(res.meta.status !== 200){
         return this.$message.error('更新用户状态失败!');
       }
@@ -170,7 +189,7 @@ export default {
     addDialogClosed(){
       this.$refs.addFromRef.resetFields()
     },
-    // 点击按钮，添加新用户
+    // 点击确定按钮，添加新用户
     addUser(){
       this.$refs.addFromRef.validate(async valid => {
         if(!valid) return;
@@ -185,7 +204,48 @@ export default {
         //重新获取用户列表数据
         this.getUserList()
       })
+    },
+    // 展示编辑用户的对话框
+    async showEditDialog(id){
+      this.editDialogVisible = true;
+      const {data : res} = await this.$http.get('users/'+ id);
+      if(res.meta.status !== 200){
+         return this.$message.error('查询用户信息失败')
+      };
+      this.editEorm = res.data;
+    },
+    //监听修改用户对话框的关闭事件
+    editDialogClosed(){
+       this.$refs.editEormRef.resetFields()
+    },
+
+    //修改用户信息并提交
+    editUserInfo(){
+      this.$refs.editEormRef.validate(async valid =>{
+        if(!valid) return;
+        //发起修改用户信息的数据请求
+        const {data : res} = await this.$http.put(
+          'users/' + this.editEorm.id,
+          {
+            email:this.editEorm.email,
+            mobile:this.editEorm.mobile,
+          }
+        );
+
+        if(res.meta.status !== 200) {
+          return this.$message.error('更新用户信息失败')
+        };
+        // 关闭对话框
+        this.editDialogVisible = false;
+        // 更新用户数据列表
+        this.getUserList();
+        // 提示信息更新成功
+        this.$message.success("更新用户信息成功")
+      })
     }
+
+
+
   }
 }
 </script>
