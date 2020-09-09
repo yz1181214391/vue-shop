@@ -244,16 +244,21 @@ export default {
       })
     },
     //根据Id删除对应的用户信息
-    removeUserById(id){
+    async removeUserById(id){
       //弹出提示框询问用户是否删除数据
-      const confirmResult = this.$confirm('此操作将永久删除该用户, 是否继续?', '提示', {
+      const confirmResult = await this.$confirm('此操作将永久删除该用户, 是否继续?', '提示', {
           confirmButtonText: '确定',
           cancelButtonText: '取消',
           type: 'warning'
-        })
+        }).catch(err => err);
+        //如果用户确认删除，则返回值为confirm
+        //如果用户取消删除，则返回值为cancel
+        if(confirmResult == 'cancel'){
+          return this.$message.info('已取消删除')
+        }
         console.log(confirmResult)
-    }
 
+    }
 
 
   }
