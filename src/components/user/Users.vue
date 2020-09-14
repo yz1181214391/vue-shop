@@ -256,8 +256,13 @@ export default {
         if(confirmResult == 'cancel'){
           return this.$message.info('已取消删除')
         }
-        console.log(confirmResult)
-
+        // console.log(confirmResult)
+        const {data : res} =await this.$http.delete('users/' + id);
+        if(res.meta.status !== 200){
+          return this.$message.error('删除用户失败！');
+        }
+        this.$message.success('删除用户成功！');
+        this.getUserList();
     }
 
 
