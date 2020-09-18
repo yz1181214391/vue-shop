@@ -126,8 +126,7 @@ export default {
       this.rightsList = res.data;
       //让分配权限对话框的显示
       this.setRightDialogVisible = true;
-    },
-    // 通过递归获取角色下所有三级权限的ID，并保存到defkeys数组中
+    }
   }
 }
 </script>
